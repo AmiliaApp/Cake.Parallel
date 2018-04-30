@@ -223,7 +223,9 @@ namespace Cake.Parallel.Module
             var execptionWasThrown = false;
             try
             {
-                await strategy.ExecuteAsync(task, context).ConfigureAwait(false);
+                var taskExecutionContext = new TaskExecutionContext(context, task);
+
+                await strategy.ExecuteAsync(task, taskExecutionContext).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {
