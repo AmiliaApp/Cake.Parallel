@@ -6,8 +6,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cake.Parallel.Module", "Cak
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cake.Parallel.Tests", "Cake.Parallel.Tests\Cake.Parallel.Tests.csproj", "{BBA3BD6A-2C19-461C-9BB1-B1E33FC92FDD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cake.Core", "..\..\cake\src\Cake.Core\Cake.Core.csproj", "{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,18 +40,6 @@ Global
 		{BBA3BD6A-2C19-461C-9BB1-B1E33FC92FDD}.Release|x64.Build.0 = Release|Any CPU
 		{BBA3BD6A-2C19-461C-9BB1-B1E33FC92FDD}.Release|x86.ActiveCfg = Release|Any CPU
 		{BBA3BD6A-2C19-461C-9BB1-B1E33FC92FDD}.Release|x86.Build.0 = Release|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Debug|x64.Build.0 = Debug|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Debug|x86.Build.0 = Debug|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Release|x64.ActiveCfg = Release|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Release|x64.Build.0 = Release|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Release|x86.ActiveCfg = Release|Any CPU
-		{0B6B00E7-3BFE-4EF1-A8B7-C0E49E826A8E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

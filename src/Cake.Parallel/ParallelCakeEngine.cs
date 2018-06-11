@@ -20,17 +20,22 @@ namespace Cake.Parallel.Module
     public class ParallelCakeEngine : ICakeEngine
     {
         private readonly List<CakeTask> _tasks;
-        private readonly ICakeLog _logger;
+        private readonly ICakeLog _log;
         private Action<ICakeContext> _setupAction;
         private Action<ITeardownContext> _teardownAction;
         private Action<ITaskSetupContext> _taskSetupAction;
         private Action<ITaskTeardownContext> _taskTeardownAction;
 
-        public ParallelCakeEngine(ICakeLog logger)
+        public ParallelCakeEngine(ICakeLog log)
         {
-            logger.Warning("PARALLELIZER IS A WORK IN PROGRESS! YOU HAVE BEEN WARNED");
+            if (log == null)
+            {
+                throw new ArgumentNullException(nameof(log));
+            }
 
-            _logger = logger;
+            log.Warning("PARALLELIZER IS A WORK IN PROGRESS! YOU HAVE BEEN WARNED");
+
+            _log = log;
             _tasks = new List<CakeTask>();
         }
 
@@ -86,10 +91,10 @@ namespace Cake.Parallel.Module
 
             try
             {
-                performSetup(strategy, context);
+                PerformSetup(strategy, context);
 
+                var stopWatch = Stopwatch.StartNew();
                 var report = new CakeReport();
-                var stopwatch = Stopwatch.StartNew();
 
                 await graph.Traverse(target, async (taskName, cts) =>
                 {
@@ -100,17 +105,17 @@ namespace Cake.Parallel.Module
 
                     var isTarget = task.Name.Equals(target, StringComparison.OrdinalIgnoreCase);
 
-                    if (shouldExecuteTask(context, task, isTarget))
+                    if (ShouldExecuteTask(context, task, isTarget))
                     {
-                        await executeTaskAsync(context, strategy, cts, task, report).ConfigureAwait(false);
+                        await ExecuteTaskAsync(context, strategy, cts, task, report).ConfigureAwait(false);
                     }
                     else
                     {
-                        skipTask(context, strategy, task, report);
+                        SkipTask(context, strategy, task, report);
                     }
                 }).ConfigureAwait(false);
 
-                _logger.Information($"All tasks completed in {stopwatch.Elapsed}");
+                _log.Information($"All tasks completed in {stopWatch.Elapsed}");
 
                 return report;
             }
@@ -133,7 +138,7 @@ namespace Cake.Parallel.Module
             }
             finally
             {
-                performTeardown(strategy, context, exceptionWasThrown, thrownException);
+                PerformTeardown(strategy, context, exceptionWasThrown, thrownException);
             }
         }
 
@@ -147,19 +152,19 @@ namespace Cake.Parallel.Module
             _taskTeardownAction = action;
         }
 
-        private void performSetup(IExecutionStrategy strategy, ICakeContext context)
+        private void PerformSetup(IExecutionStrategy strategy, ICakeContext context)
         {
-            publishEvent(Setup, new SetupEventArgs(context));
+            PublishEvent(Setup, new SetupEventArgs(context));
             if (_setupAction != null)
             {
                 strategy.PerformSetup(_setupAction, context);
             }
         }
 
-        private void performTeardown(IExecutionStrategy strategy, ICakeContext context, bool exceptionWasThrown, Exception thrownException)
+        private void PerformTeardown(IExecutionStrategy strategy, ICakeContext context, bool exceptionWasThrown, Exception thrownException)
         {
             var teardownContext = new TeardownContext(context, thrownException);
-            publishEvent(Teardown, new TeardownEventArgs(teardownContext));
+            PublishEvent(Teardown, new TeardownEventArgs(teardownContext));
             if (_teardownAction != null)
             {
                 try
@@ -168,18 +173,18 @@ namespace Cake.Parallel.Module
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("An error occurred in the custom teardown action.");
+                    _log.Error("An error occurred in the custom teardown action.");
                     if (!exceptionWasThrown)
                     {
                         // If no other exception was thrown, we throw this one.
                         throw;
                     }
-                    _logger.Error("Teardown error: {0}", ex.ToString());
+                    _log.Error("Teardown error: {0}", ex.ToString());
                 }
             }
         }
 
-        private void publishEvent<T>(EventHandler<T> eventHandler, T eventArgs) where T : EventArgs
+        private void PublishEvent<T>(EventHandler<T> eventHandler, T eventArgs) where T : EventArgs
         {
             if (eventHandler != null)
             {
@@ -192,14 +197,14 @@ namespace Cake.Parallel.Module
                     }
                     catch (Exception e)
                     {
-                        _logger.Error($"An error occurred in the event handler {handler.GetMethodInfo().Name}: {e.Message}");
+                        _log.Error($"An error occurred in the event handler {handler.GetMethodInfo().Name}: {e.Message}");
                         throw;
                     }
                 }
             }
         }
 
-        private bool shouldExecuteTask(ICakeContext context, CakeTask task, bool isTarget)
+        private bool ShouldExecuteTask(ICakeContext context, CakeTask task, bool isTarget)
         {
             foreach (var criteria in task.Criterias)
             {
@@ -207,18 +212,18 @@ namespace Cake.Parallel.Module
                 {
                     if (!isTarget) return false;
 
-                    throw new CakeException($"Could not reach target '{task.Name}' since it was skipped due to a criteria");
+                    throw new CakeException($"Could not reach target '{task.Name}' since it was skipped due to a criteria.");
                 }
             }
             return true;
         }
 
-        private async Task executeTaskAsync(ICakeContext context, IExecutionStrategy strategy, CancellationTokenSource cts, CakeTask task, CakeReport report)
+        private async Task ExecuteTaskAsync(ICakeContext context, IExecutionStrategy strategy, CancellationTokenSource cts, CakeTask task, CakeReport report)
         {
-            _logger.Verbose($"Starting task {task.Name}");
+            _log.Verbose($"Starting task {task.Name}");
             var stopwatch = Stopwatch.StartNew();
 
-            performTaskSetup(context, strategy, task, false);
+            PerformTaskSetup(context, strategy, task, false);
 
             var execptionWasThrown = false;
             try
@@ -235,16 +240,16 @@ namespace Cake.Parallel.Module
             catch (Exception exception)
             {
                 execptionWasThrown = true;
-                _logger.Error($"An error occurred when executing task '{task.Name}'.");
+                _log.Error($"An error occurred when executing task '{task.Name}'.");
 
                 if (task.ErrorReporter != null)
                 {
-                    reportErrors(strategy, task.ErrorReporter, exception);
+                    ReportErrors(strategy, task.ErrorReporter, exception);
                 }
 
                 if (task.ErrorHandler != null)
                 {
-                    handleErrors(strategy, task.ErrorHandler, exception);
+                    HandleErrors(strategy, task.ErrorHandler, exception);
                 }
                 else
                 {
@@ -256,7 +261,7 @@ namespace Cake.Parallel.Module
             {
                 strategy.InvokeFinally(task.FinallyHandler);
 
-                performTaskTeardown(context, strategy, task, stopwatch.Elapsed, false, execptionWasThrown);
+                PerformTaskTeardown(context, strategy, task, stopwatch.Elapsed, false, execptionWasThrown);
             }
 
             if (isDelegatedTask(task))
@@ -269,11 +274,11 @@ namespace Cake.Parallel.Module
             }
         }
 
-        private void skipTask(ICakeContext context, IExecutionStrategy strategy, CakeTask task, CakeReport report)
+        private void SkipTask(ICakeContext context, IExecutionStrategy strategy, CakeTask task, CakeReport report)
         {
-            performTaskSetup(context, strategy, task, true);
+            PerformTaskSetup(context, strategy, task, true);
             strategy.Skip(task);
-            performTaskTeardown(context, strategy, task, TimeSpan.Zero, true, false);
+            PerformTaskTeardown(context, strategy, task, TimeSpan.Zero, true, false);
 
             report.AddSkipped(task.Name);
         }
@@ -285,7 +290,7 @@ namespace Cake.Parallel.Module
             return actionTask != null && !actionTask.Actions.Any();
         }
 
-        private void reportErrors(IExecutionStrategy strategy, Action<Exception> errorReporter, Exception taskException)
+        private void ReportErrors(IExecutionStrategy strategy, Action<Exception> errorReporter, Exception taskException)
         {
             try
             {
@@ -294,7 +299,7 @@ namespace Cake.Parallel.Module
             catch { }
         }
 
-        private void handleErrors(IExecutionStrategy strategy, Action<Exception> errorHandler, Exception exception)
+        private void HandleErrors(IExecutionStrategy strategy, Action<Exception> errorHandler, Exception exception)
         {
             try
             {
@@ -304,16 +309,16 @@ namespace Cake.Parallel.Module
             {
                 if (errorHandlerException != exception)
                 {
-                    _logger.Error($"Error: {exception.Message}");
+                    _log.Error($"Error: {exception.Message}");
                 }
                 throw;
             }
         }
 
-        public void performTaskSetup(ICakeContext context, IExecutionStrategy strategy, CakeTask task, bool skipped)
+        public void PerformTaskSetup(ICakeContext context, IExecutionStrategy strategy, CakeTask task, bool skipped)
         {
             var taskSetupContext = new TaskSetupContext(context, task);
-            publishEvent(TaskSetup, new TaskSetupEventArgs(taskSetupContext));
+            PublishEvent(TaskSetup, new TaskSetupEventArgs(taskSetupContext));
 
             if (_taskSetupAction != null)
             {
@@ -323,16 +328,16 @@ namespace Cake.Parallel.Module
                 }
                 catch
                 {
-                    performTaskTeardown(context, strategy, task, TimeSpan.Zero, skipped, true);
+                    PerformTaskTeardown(context, strategy, task, TimeSpan.Zero, skipped, true);
                     throw;
                 }
             }
         }
 
-        public void performTaskTeardown(ICakeContext context, IExecutionStrategy strategy, CakeTask task, TimeSpan duration, bool skipped, bool exceptionWasThrown)
+        public void PerformTaskTeardown(ICakeContext context, IExecutionStrategy strategy, CakeTask task, TimeSpan duration, bool skipped, bool exceptionWasThrown)
         {
             var taskTeardownContext = new TaskTeardownContext(context, task, duration, skipped);
-            publishEvent(TaskTeardown, new TaskTeardownEventArgs(taskTeardownContext));
+            PublishEvent(TaskTeardown, new TaskTeardownEventArgs(taskTeardownContext));
 
             if (_taskTeardownAction != null)
             {
@@ -342,13 +347,13 @@ namespace Cake.Parallel.Module
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"An error occurred in the custom task teardown action ({task.Name}).");
+                    _log.Error($"An error occurred in the custom task teardown action ({task.Name}).");
                     if (!exceptionWasThrown)
                     {
                         // If no other exception was thrown, we throw this one.
                         throw;
                     }
-                    _logger.Error($"Task Teardown error ({task.Name}): {ex}");
+                    _log.Error($"Task Teardown error ({task.Name}): {ex}");
                 }
             }
         }

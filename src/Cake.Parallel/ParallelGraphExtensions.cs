@@ -13,14 +13,14 @@ namespace Cake.Parallel.Module
           Func<string, CancellationTokenSource, Task> executeTask)
         {
             if (!graph.Exist(target)) return;
-            if (graph.hasCircularReferences(target)) throw new CakeException("Graph contains circular references.");
+            if (graph.HasCircularReferences(target)) throw new CakeException("Graph contains circular references.");
 
             var cancellationTokenSource = new CancellationTokenSource();
             var visitedNodes = new Dictionary<string, Task>();
-            await graph.traverse(target, executeTask, cancellationTokenSource, visitedNodes);
+            await graph.Traverse(target, executeTask, cancellationTokenSource, visitedNodes);
         }
 
-        private static async Task traverse(
+        private static async Task Traverse(
             this CakeGraph graph, string nodeName,
             Func<string, CancellationTokenSource, Task> executeTask,
             CancellationTokenSource cancellationTokenSource,
@@ -37,7 +37,7 @@ namespace Cake.Parallel.Module
                 .Where(_ => _.End.Equals(nodeName, StringComparison.OrdinalIgnoreCase))
                 .Select(_ =>
                 {
-                    var task = graph.traverse(_.Start, executeTask, cancellationTokenSource, visitedNodes);
+                    var task = graph.Traverse(_.Start, executeTask, cancellationTokenSource, visitedNodes);
                     visitedNodes[_.Start] = task;
                     return task;
                 })
@@ -52,10 +52,10 @@ namespace Cake.Parallel.Module
 
             // The below line does work correctly, but does not bubble up the TaskCanceledException
             // await executeTask(nodeName, cancellationTokenSource).ConfigureAwait(false);
-            await Task.Factory.StartNew(() => executeTask(nodeName, cancellationTokenSource), token).ConfigureAwait(false);
+            await Task.Run(() => executeTask(nodeName, cancellationTokenSource), token).ConfigureAwait(false);
         }
 
-        private static bool hasCircularReferences(this CakeGraph graph, string nodeName, Stack<string> visited = null)
+        private static bool HasCircularReferences(this CakeGraph graph, string nodeName, Stack<string> visited = null)
         {
             visited = visited ?? new Stack<string>();
 
@@ -64,7 +64,7 @@ namespace Cake.Parallel.Module
             visited.Push(nodeName);
             var hasCircularReference = graph.Edges
                 .Where(_ => _.End.Equals(nodeName, StringComparison.OrdinalIgnoreCase))
-                .Any(_ => graph.hasCircularReferences(_.Start, visited));
+                .Any(_ => graph.HasCircularReferences(_.Start, visited));
             visited.Pop();
             return hasCircularReference;
         }

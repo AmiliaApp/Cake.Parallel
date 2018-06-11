@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\cake\src\Cake.Core\Cake.Core.csproj" />
+    <Reference Include="Cake.Core">
+      <HintPath>..\..\assemblies\Cake.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
