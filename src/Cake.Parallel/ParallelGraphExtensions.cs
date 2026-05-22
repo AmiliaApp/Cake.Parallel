@@ -51,7 +51,7 @@ namespace Cake.Parallel.Module
             }
 
             // The below line does work correctly, but does not bubble up the TaskCanceledException
-            // await executeTask(nodeName, cancellationTokenSource).ConfigureAwait(false);
+            
             await Task.Run(() => executeTask(nodeName, cancellationTokenSource), token).ConfigureAwait(false);
         }
 

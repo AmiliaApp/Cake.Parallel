@@ -296,7 +296,10 @@ namespace Cake.Parallel.Module
             {
                 strategy.ReportErrors(errorReporter, taskException);
             }
-            catch { }
+            catch
+            {
+                // Intentionally suppressed: if error reporting itself fails, there is nothing more we can do.
+            }
         }
 
         private void HandleErrors(IExecutionStrategy strategy, Action<Exception> errorHandler, Exception exception)

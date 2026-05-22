@@ -8,7 +8,7 @@ using Cake.Core;
 
 namespace Cake.Parallel.Module
 {
-    public class ParallelGraphBuilder
+    public static class ParallelGraphBuilder
     {
         public static CakeGraph Build(List<CakeTask> tasks)
         {
