@@ -313,8 +313,12 @@ namespace Cake.Parallel.Tests
                 var engine = fixture.CreateEngine();
                 engine.RegisterTask("A").ContinueOnError().Does(() => { throw new InvalidOperationException(); });
 
-                // When, Then
-                await engine.RunTargetAsync(fixture.Context, fixture.ExecutionStrategy, "A");
+                // When
+                var record = await Record.ExceptionAsync(async () =>
+                    await engine.RunTargetAsync(fixture.Context, fixture.ExecutionStrategy, "A"));
+
+                // Then
+                Assert.Null(record);
             }
 
             [Fact]
